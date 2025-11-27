@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do List</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-bg: #0f0f0f;
+            --surface-bg: rgba(255, 255, 255, 0.08);
+            --surface-border: rgba(255, 255, 255, 0.12);
+            --accent-primary: #6366f1;
+            --accent-secondary: #8b5cf6;
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.7);
+            --success: #10b981;
+            --danger: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: 
+                radial-gradient(ellipse at 20% 20%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+                var(--primary-bg);
+            min-height: 100vh;
+            padding: 20px;
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: var(--surface-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--surface-border);
+            border-radius: 24px;
+            padding: 40px 30px;
+            box-shadow: 
+                0 25px 50px -12px rgba(0, 0, 0, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 40px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .add-task {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 40px;
+        }
+
+        #taskInput {
+            flex: 1;
+            padding: 16px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid var(--surface-border);
+            border-radius: 16px;
+            font-size: 16px;
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        #taskInput::placeholder {
+            color: var(--text-secondary);
+        }
+
+        #taskInput:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        #addBtn {
+            padding: 16px 24px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white;
+            border: none;
+            border-radius: 16px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        #addBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.3);
+        }
+
+        .task-list {
+            list-style: none;
+            margin-bottom: 30px;
+        }
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            padding: 20px;
+            margin-bottom: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--surface-border);
+            border-radius: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .task-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateX(8px);
+        }
+
+        .task-item.completed {
+            background: rgba(16, 185, 129, 0.05);
+            border-color: rgba(16, 185, 129, 0.2);
+        }
+
+        .task-item.completed .task-text {
+            color: var(--text-secondary);
+            text-decoration: line-through;
+        }
+
+        .task-text {
+            flex: 1;
+            font-size: 16px;
+            color: var(--text-primary);
+            margin-right: 15px;
+            word-break: break-word;
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .toggle-btn, .delete-btn {
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+        }
+
+        .toggle-btn:hover {
+            background: var(--success);
+            transform: scale(1.1);
+        }
+
+        .delete-btn:hover {
+            background: var(--danger);
+            transform: scale(1.1);
+        }
+
+        .empty-message {
+            text-align: center;
+            color: var(--text-secondary);
+            font-style: italic;
+            padding: 60px 20px;
+            font-size: 18px;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            padding-top: 25px;
+            border-top: 1px solid var(--surface-border);
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            border: 1px solid var(--surface-border);
+        }
+
+        .stat-number {
+            display: block;
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 5px;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .task-item {
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        @keyframes slideOut {
+            to {
+                opacity: 0;
+                transform: translateX(-100%) scale(0.8);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>To-Do List</h1>
+        
+        <div class="add-task">
+            <input type="text" id="taskInput" placeholder="Что нужно сделать?">
+            <button id="addBtn">Добавить</button>
+        </div>
+        
+        <ul id="taskList" class="task-list">
+            <li class="empty-message">Задач пока нет</li>
+        </ul>
+        
+        <div class="stats">
+            <div class="stat-item">
+                <span class="stat-number" id="totalTasks">0</span>
+                <span class="stat-label">Всего</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" id="completedTasks">0</span>
+                <span class="stat-label">Выполнено</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" id="pendingTasks">0</span>
+                <span class="stat-label">Осталось</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Все в одном файле - точно заработает!
+        console.log('Скрипт запущен!');
+
+        let tasks = [];
+
+        // Элементы DOM
+        const taskInput = document.getElementById('taskInput');
+        const addBtn = document.getElementById('addBtn');
+        const taskList = document.getElementById('taskList');
+        const totalTasksEl = document.getElementById('totalTasks');
+        const completedTasksEl = document.getElementById('completedTasks');
+        const pendingTasksEl = document.getElementById('pendingTasks');
+
+        // Генератор ID
+        const generateId = () => `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+        // Функции для работы с задачами
+        function addTask(text) {
+            console.log('Добавляем задачу:', text);
+            if (!text.trim()) {
+                taskInput.style.animation = 'shake 0.5s ease-in-out';
+                setTimeout(() => taskInput.style.animation = '', 500);
+                return null;
+            }
+            
+            const newTask = {
+                id: generateId(),
+                text: text.trim(),
+                completed: false,
+                createdAt: new Date().toISOString()
+            };
+            
+            tasks.push(newTask);
+            return newTask;
+        }
+
+        function deleteTask(taskId) {
+            tasks = tasks.filter(task => task.id !== taskId);
+        }
+
+        function toggleTask(taskId) {
+            const task = tasks.find(task => task.id === taskId);
+            if (task) {
+                task.completed = !task.completed;
+            }
+            return task;
+        }
+
+        function getTasksStats() {
+            return {
+                total: tasks.length,
+                completed: tasks.filter(task => task.completed).length
+            };
+        }
+
+        // Работа с localStorage
+        function saveTasksToStorage() {
+            try {
+                localStorage.setItem('todo_app_tasks', JSON.stringify(tasks));
+                return true;
+            } catch (error) {
+                console.error('Ошибка сохранения:', error);
+                return false;
+            }
+        }
+
+        function loadTasksFromStorage() {
+            try {
+                const stored = localStorage.getItem('todo_app_tasks');
+                return stored ? JSON.parse(stored) : [];
+            } catch (error) {
+                console.error('Ошибка загрузки:', error);
+                return [];
+            }
+        }
+
+        // Функции интерфейса
+        function renderTasks() {
+            console.log('Отрисовываем задачи:', tasks);
+            
+            if (tasks.length === 0) {
+                taskList.innerHTML = '<li class="empty-message">Задач пока нет</li>';
+                return;
+            }
+            
+            taskList.innerHTML = '';
+            
+            tasks.forEach(task => {
+                const li = document.createElement('li');
+                li.className = `task-item ${task.completed ? 'completed' : ''}`;
+                li.dataset.id = task.id;
+                
+                li.innerHTML = `
+                    <span class="task-text">${task.text}</span>
+                    <div class="task-actions">
+                        <button class="toggle-btn">${task.completed ? '↶' : '✓'}</button>
+                        <button class="delete-btn">×</button>
+                    </div>
+                `;
+                
+                taskList.appendChild(li);
+            });
+            
+            updateStats();
+        }
+
+        function updateStats() {
+            const { total, completed } = getTasksStats();
+            const pending = total - completed;
+            
+            totalTasksEl.textContent = total;
+            completedTasksEl.textContent = completed;
+            pendingTasksEl.textContent = pending;
+        }
+
+        // Обработчики событий
+        function handleAddTask() {
+            console.log('Кнопка нажата! Ввод:', taskInput.value);
+            const taskText = taskInput.value;
+            
+            if (taskText) {
+                const newTask = addTask(taskText);
+                
+                if (newTask) {
+                    renderTasks();
+                    saveTasksToStorage();
+                    taskInput.value = '';
+                    taskInput.focus();
+                }
+            } else {
+                // Анимация для пустого ввода
+                taskInput.style.animation = 'shake 0.5s ease-in-out';
+                setTimeout(() => taskInput.style.animation = '', 500);
+            }
+        }
+
+        // Назначение обработчиков
+        addBtn.addEventListener('click', handleAddTask);
+
+        taskInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                handleAddTask();
+            }
+        });
+
+        // Делегирование событий для кнопок задач
+        taskList.addEventListener('click', (e) => {
+            const taskItem = e.target.closest('.task-item');
+            if (!taskItem) return;
+            
+            const taskId = taskItem.dataset.id;
+            
+            if (e.target.classList.contains('toggle-btn')) {
+                toggleTask(taskId);
+                renderTasks();
+                saveTasksToStorage();
+            }
+            
+            if (e.target.classList.contains('delete-btn')) {
+                // Анимация удаления
+                taskItem.style.animation = 'slideOut 0.3s ease-in forwards';
+                setTimeout(() => {
+                    deleteTask(taskId);
+                    renderTasks();
+                    saveTasksToStorage();
+                }, 300);
+            }
+        });
+
+        // Инициализация
+        function initApp() {
+            console.log('Инициализация приложения');
+            tasks = loadTasksFromStorage();
+            renderTasks();
+        }
+
+        // Запуск при загрузке страницы
+        document.addEventListener('DOMContentLoaded', initApp);
+
+        // Тестовая функция
+        window.testApp = function() {
+            console.log('=== ТЕСТ ===');
+            console.log('Tasks:', tasks);
+            console.log('Elements:', {
+                taskInput: taskInput ? 'найден' : 'не найден',
+                addBtn: addBtn ? 'найден' : 'не найден',
+                taskList: taskList ? 'найден' : 'не найден'
+            });
+            
+            // Добавим тестовую задачу
+            const testTask = addTask('Тестовая задача');
+            if (testTask) {
+                renderTasks();
+                saveTasksToStorage();
+                console.log('Тестовая задача добавлена!');
+            }
+        };
+    </script>
+</body>
+</html>
